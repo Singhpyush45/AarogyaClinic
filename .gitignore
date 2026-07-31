@@ -1,0 +1,10 @@
+node_modules/
+.env
+data/*.db
+data/*.db-journal
+.DS_Store
+cricket-guess-mobile/
+SubwaySurferV.8/
+rail-dash-deluxe/
+car-sale-website-work/
+output/

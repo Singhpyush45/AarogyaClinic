@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard | Aarogya Homeopathic Clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-mark">आ</div>
+    <h2>Staff Login</h2>
+    <p class="login-sub">Aarogya Homeopathic Clinic — Admin Dashboard</p>
+    <form id="loginForm">
+      <input type="text" name="username" placeholder="Username" required autocomplete="username">
+      <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+      <button type="submit" class="btn" id="loginBtn">Log In</button>
+      <p class="login-msg" id="loginMsg"></p>
+    </form>
+    <a href="/" class="back-link">← Back to website</a>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboard" class="dashboard hidden">
+  <header class="dash-header">
+    <div class="brand"><div class="brand-mark">आ</div><span>Aarogya Admin</span></div>
+    <div class="header-right">
+      <span class="live-dot"></span><span class="live-text">Live</span>
+      <button class="btn-outline" id="logoutBtn">Log Out</button>
+    </div>
+  </header>
+
+  <main class="dash-main">
+    <div class="stats-grid">
+      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total Appointments</div></div>
+      <div class="stat-box"><div class="stat-num" id="statPending">0</div><div class="stat-lbl">Pending</div></div>
+      <div class="stat-box"><div class="stat-num" id="statConfirmed">0</div><div class="stat-lbl">Confirmed</div></div>
+      <div class="stat-box"><div class="stat-num" id="statToday">0</div><div class="stat-lbl">Today's Bookings</div></div>
+    </div>
+
+    <div class="toolbar">
+      <input type="text" id="searchInput" placeholder="Search by name, phone, or ID…">
+      <select id="statusFilter">
+        <option value="">All Statuses</option>
+        <option value="pending">Pending</option>
+        <option value="confirmed">Confirmed</option>
+        <option value="completed">Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select>
+      <button class="btn-outline" id="refreshBtn">Refresh</button>
+    </div>
+
+    <div class="table-wrap">
+      <table id="apptTable">
+        <thead>
+          <tr>
+            <th>ID</th><th>Patient</th><th>Phone</th><th>Date</th><th>Time</th><th>Concern</th><th>Status</th><th>Receipt</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="apptTbody">
+          <tr><td colspan="9" class="empty-row">Loading appointments…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ---- Doctor Photo ---- -->
+    <div class="panel-head">
+      <h2>Doctor Photo</h2>
+      <p>Upload a new photo any time — it updates on the website instantly.</p>
+    </div>
+    <div class="photo-card">
+      <img id="currentDoctorPhoto" src="assets/doctor.jpg" alt="Current doctor photo">
+      <div class="photo-upload-area">
+        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+        <button class="btn-outline" id="choosePhotoBtn">Choose New Photo</button>
+        <span id="photoFileName" class="photo-filename"></span>
+        <button class="btn" id="uploadPhotoBtn" disabled>Upload Photo</button>
+        <p class="form-msg" id="photoMsg"></p>
+        <p class="photo-hint">JPG, PNG or WEBP · max 5MB · will be auto-cropped to a portrait frame</p>
+      </div>
+    </div>
+
+    <!-- ---- Reviews ---- -->
+    <div class="panel-head">
+      <h2>Patient Reviews</h2>
+      <p>Reviews patients submit on the website appear here automatically and go live immediately. Hide or delete anything inappropriate. You can also add a review yourself (e.g. one collected over phone/WhatsApp).</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn-outline" id="addReviewToggleBtn">+ Add Review Manually</button>
+    </div>
+    <form id="adminReviewForm" class="admin-review-form hidden">
+      <div class="form-row-admin">
+        <input type="text" name="patient_name" placeholder="Patient Name *" required>
+        <input type="text" name="city" placeholder="City">
+        <select name="rating">
+          <option value="5">★★★★★ (5)</option>
+          <option value="4">★★★★☆ (4)</option>
+          <option value="3">★★★☆☆ (3)</option>
+          <option value="2">★★☆☆☆ (2)</option>
+          <option value="1">★☆☆☆☆ (1)</option>
+        </select>
+      </div>
+      <textarea name="review_text" placeholder="Review text *" rows="2" required></textarea>
+      <button type="submit" class="btn">Add Review</button>
+    </form>
+    <div class="reviews-list" id="reviewsAdminList">
+      <p class="empty-row">Loading reviews…</p>
+    </div>
+  </main>
+</div>
+
+<!-- toast for new appointment notifications -->
+<div id="toast" class="toast"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
