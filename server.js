@@ -11,6 +11,7 @@ const { Server } = require('socket.io');
 const appointmentsRouter = require('./routes/appointments');
 const adminRouter = require('./routes/admin');
 const reviewsRouter = require('./routes/reviews');
+const { initDb } = require('./db/database');
 
 const app = express();
 const server = http.createServer(app);
@@ -75,9 +76,19 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`\n  🌿 Aarogya Homeopathic Clinic server running`);
-  console.log(`  ➜ Website:        http://localhost:${PORT}`);
-  console.log(`  ➜ Admin Login:    http://localhost:${PORT}/admin.html`);
-  console.log(`  ➜ Default admin:  ${process.env.ADMIN_USERNAME || 'admin'} / (see .env)\n`);
-});
+
+// Create tables (if they don't exist yet) before accepting traffic
+initDb()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`\n  🌿 Aarogya Homeopathic Clinic server running`);
+      console.log(`  ➜ Website:        http://localhost:${PORT}`);
+      console.log(`  ➜ Admin Login:    http://localhost:${PORT}/admin.html`);
+      console.log(`  ➜ Default admin:  ${process.env.ADMIN_USERNAME || 'admin'} / (see .env)\n`);
+    });
+  })
+  .catch((err) => {
+    console.error('\n❌ Could not connect to the database. Check your DATABASE_URL in .env.');
+    console.error(err.message, '\n');
+    process.exit(1);
+  });

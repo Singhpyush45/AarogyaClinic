@@ -60,36 +60,51 @@ router.post('/login', async (req, res) => {
 });
 
 // GET /api/admin/appointments  — list all (with optional filters)
-router.get('/appointments', requireAdmin, (req, res) => {
-  const { status, date, search } = req.query;
-  const appointments = listAppointments({ status, date, search });
-  res.json({ appointments });
+router.get('/appointments', requireAdmin, async (req, res) => {
+  try {
+    const { status, date, search } = req.query;
+    const appointments = await listAppointments({ status, date, search });
+    res.json({ appointments });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load appointments.' });
+  }
 });
 
 // GET /api/admin/stats — dashboard summary numbers
-router.get('/stats', requireAdmin, (req, res) => {
-  res.json({ stats: getStats() });
+router.get('/stats', requireAdmin, async (req, res) => {
+  try {
+    res.json({ stats: await getStats() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load stats.' });
+  }
 });
 
 // PATCH /api/admin/appointments/:id/status  — confirm / cancel / complete
-router.patch('/appointments/:id/status', requireAdmin, (req, res) => {
-  const { status } = req.body;
-  const allowed = ['pending', 'confirmed', 'cancelled', 'completed'];
-  if (!allowed.includes(status)) {
-    return res.status(400).json({ error: 'Invalid status value.' });
+router.patch('/appointments/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['pending', 'confirmed', 'cancelled', 'completed'];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ error: 'Invalid status value.' });
+    }
+
+    const existing = await getAppointmentById(req.params.id);
+    if (!existing) {
+      return res.status(404).json({ error: 'Appointment not found.' });
+    }
+
+    const updated = await updateAppointmentStatus(req.params.id, status);
+
+    const io = req.app.get('io');
+    if (io) io.emit('appointment_updated', updated);
+
+    res.json({ success: true, appointment: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not update status.' });
   }
-
-  const existing = getAppointmentById(req.params.id);
-  if (!existing) {
-    return res.status(404).json({ error: 'Appointment not found.' });
-  }
-
-  const updated = updateAppointmentStatus(req.params.id, status);
-
-  const io = req.app.get('io');
-  if (io) io.emit('appointment_updated', updated);
-
-  res.json({ success: true, appointment: updated });
 });
 
 // POST /api/admin/doctor-photo — upload a new doctor photo
@@ -132,50 +147,75 @@ router.post('/doctor-photo', requireAdmin, (req, res, next) => {
 // ---- Reviews moderation ----
 
 // GET /api/admin/reviews — list ALL reviews (visible + hidden)
-router.get('/reviews', requireAdmin, (req, res) => {
-  res.json({ reviews: listAllReviews() });
+router.get('/reviews', requireAdmin, async (req, res) => {
+  try {
+    res.json({ reviews: await listAllReviews() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load reviews.' });
+  }
 });
 
 // POST /api/admin/reviews — admin manually adds a review (e.g. one collected
 // over phone/WhatsApp from a real patient)
-router.post('/reviews', requireAdmin, (req, res) => {
-  const { patient_name, city, rating, review_text } = req.body;
-  if (!patient_name || !review_text || !rating) {
-    return res.status(400).json({ error: 'Name, rating, and review text are required.' });
+router.post('/reviews', requireAdmin, async (req, res) => {
+  try {
+    const { patient_name, city, rating, review_text } = req.body;
+    if (!patient_name || !review_text || !rating) {
+      return res.status(400).json({ error: 'Name, rating, and review text are required.' });
+    }
+    const review = await createReview({
+      patient_name,
+      city,
+      rating: Number(rating),
+      review_text,
+      source: 'admin_added',
+    });
+    res.status(201).json({ success: true, review });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not add review.' });
   }
-  const review = createReview({
-    patient_name,
-    city,
-    rating: Number(rating),
-    review_text,
-    source: 'admin_added',
-  });
-  res.status(201).json({ success: true, review });
 });
 
 // PATCH /api/admin/reviews/:id/status — hide or re-show a review
-router.patch('/reviews/:id/status', requireAdmin, (req, res) => {
-  const { status } = req.body;
-  if (!['visible', 'hidden'].includes(status)) {
-    return res.status(400).json({ error: 'Invalid status.' });
+router.patch('/reviews/:id/status', requireAdmin, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['visible', 'hidden'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status.' });
+    }
+    const updated = await updateReviewStatus(req.params.id, status);
+    res.json({ success: true, review: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not update review.' });
   }
-  const updated = updateReviewStatus(req.params.id, status);
-  res.json({ success: true, review: updated });
 });
 
 // DELETE /api/admin/reviews/:id — permanently delete a review
-router.delete('/reviews/:id', requireAdmin, (req, res) => {
-  deleteReview(req.params.id);
-  res.json({ success: true });
+router.delete('/reviews/:id', requireAdmin, async (req, res) => {
+  try {
+    await deleteReview(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not delete review.' });
+  }
 });
 
 // GET /api/admin/appointments/:id/receipt — staff can always download, no phone check needed
-router.get('/appointments/:id/receipt', requireAdmin, (req, res) => {
-  const appointment = getAppointmentById(req.params.id);
-  if (!appointment) {
-    return res.status(404).json({ error: 'Appointment not found.' });
+router.get('/appointments/:id/receipt', requireAdmin, async (req, res) => {
+  try {
+    const appointment = await getAppointmentById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found.' });
+    }
+    generateReceiptPDF(appointment, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not generate receipt.' });
   }
-  generateReceiptPDF(appointment, res);
 });
 
 module.exports = router;

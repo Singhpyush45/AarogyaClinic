@@ -10,26 +10,25 @@ notification.
 |------------|--------------------------------|-----|
 | Frontend   | Plain HTML + CSS + JS          | Simple, fast, no build step, easy to edit |
 | Backend    | Node.js + Express               | Industry standard, huge community, easy to deploy |
-| Database   | SQLite (`node:sqlite`, built into Node.js) | Zero setup, no separate DB server needed, file-based — perfect for a single-clinic site. **No native compilation** (unlike `better-sqlite3`), so it won't break during deployment. |
+| Database   | PostgreSQL (e.g. free Supabase) | **Permanent storage.** Unlike a local SQLite file, this survives redeploys and restarts — free hosts like Render wipe local files on every redeploy, which used to delete all appointments. A real database fixes that completely. |
 | Real-time  | Socket.io                       | Push new-appointment alerts to the admin dashboard instantly |
 | PDF        | PDFKit                          | Generates the appointment receipt as a downloadable PDF |
 | Auth       | JWT + bcrypt                    | Protects the `/admin.html` dashboard |
 | Email (optional) | Nodemailer                | Sends an email to the clinic when a new appointment is booked, if configured |
 | Image uploads | Multer + Sharp             | Lets the admin upload a new doctor photo from the dashboard — auto-corrects rotation and resizes it |
 
-**Requires Node.js version 22.5 or higher** (for the built-in SQLite module).
-Check yours with `node -v`. If it's older, download the latest LTS from
-[nodejs.org](https://nodejs.org).
+**Requires Node.js version 18 or higher.** Check yours with `node -v`.
 
 ## Folder Structure
 
 ```
 aarogya-clinic/
 ├── server.js              → main server entry point
-├── db/database.js         → SQLite schema + all DB queries
+├── db/database.js         → PostgreSQL schema + all DB queries
 ├── routes/
 │   ├── appointments.js    → public booking API
-│   └── admin.js           → login + protected admin API
+│   ├── admin.js           → login + protected admin API
+│   └── reviews.js         → public review submission + fetch
 ├── middleware/auth.js     → JWT check for admin routes
 ├── utils/
 │   ├── receipt.js         → PDF receipt generator
@@ -40,25 +39,42 @@ aarogya-clinic/
 │   ├── css/style.css, css/admin.css
 │   ├── js/script.js, js/admin.js
 │   └── assets/doctor.jpg
-├── data/clinic.db         → SQLite database file (auto-created on first run)
 ├── .env.example           → copy this to .env and fill in your details
 └── package.json
 ```
 
-## Step 1 — Install dependencies
+## Step 1 — Get a free PostgreSQL database (Supabase)
+
+1. Go to [supabase.com](https://supabase.com) and sign in (or create a free account).
+2. Create a **New Project** — give it any name, set a database password (remember it!), pick the region closest to you.
+3. Wait ~2 minutes for it to finish setting up.
+4. Go to **Project Settings → Database → Connection String → URI**. Copy it —
+   it looks like:
+   ```
+   postgresql://postgres:YOUR_PASSWORD@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   ```
+5. If your password has special characters, URL-encode them in the string:
+   `@` → `%40`, `#` → `%23`, `%` → `%25`, `&` → `%26`
+
+   You'll paste this as `DATABASE_URL` in Step 3 below. **The app creates its
+   own tables automatically the first time it starts** — you don't need to
+   run any SQL yourself.
+
+## Step 2 — Install dependencies
 
 ```bash
 cd aarogya-clinic
 npm install
 ```
 
-## Step 2 — Configure your `.env`
+## Step 3 — Configure your `.env`
 
 ```bash
 cp .env.example .env
 ```
 
 Open `.env` and edit:
+- `DATABASE_URL` → your Supabase connection string from Step 1.
 - `CLINIC_NAME`, `CLINIC_DOCTOR`, `CLINIC_PHONE`, `CLINIC_EMAIL`, `CLINIC_ADDRESS`
   → these show up automatically on the website and on the PDF receipt.
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH` → login for `/admin.html`.
@@ -70,13 +86,18 @@ Open `.env` and edit:
   Paste the output into `ADMIN_PASSWORD_HASH`.
 - `JWT_SECRET` → any long random string (used to sign login sessions).
 - `SMTP_*` (optional) → only fill these in if you want an email sent to the
-  clinic every time someone books. Leave blank to skip — the site works fine
-  without it, since the admin dashboard already shows live notifications.
+  clinic every time someone books. Leave blank to skip.
 
-## Step 3 — Run it
+## Step 4 — Run it
 
 ```bash
 npm start
+```
+
+You should see:
+```
+✓ Database schema ready (appointments, reviews)
+🌿 Aarogya Homeopathic Clinic server running
 ```
 
 Then open:
@@ -139,18 +160,28 @@ you only need **one** hosting service, not separate frontend/backend hosts.
 2. Go to [render.com](https://render.com) → New → Web Service → connect your repo.
 3. Build command: `npm install`
 4. Start command: `npm start`
-5. Add all your `.env` values under Render's "Environment" tab.
+5. Add all your `.env` values (including `DATABASE_URL`) under Render's
+   "Environment" tab — Render does **not** read your local `.env` file, you
+   must re-enter every value there.
 6. Deploy. Render gives you a live URL like `https://aarogya-clinic.onrender.com`.
 
 ### Alternative: Railway.app
-Same idea — connect GitHub repo, set environment variables, deploy.
+Same idea — connect GitHub repo, set environment variables (including
+`DATABASE_URL`), deploy.
 
-⚠️ **Important:** Both Render and Railway support Node 22, but free tiers may
-use an "ephemeral" filesystem, meaning the SQLite file can reset on redeploys.
-For a real clinic in production, once you outgrow the free tier, consider
-upgrading to a paid plan with a persistent disk, or migrating to a hosted
-database later (Supabase/Postgres) — the `db/database.js` file is the only
-place you'd need to change.
+✅ **Data persistence:** because appointments and reviews now live in
+PostgreSQL (Supabase) rather than a local file, they will **not** be lost
+when Render/Railway redeploys or restarts your app — this was the whole
+point of the migration. Free-tier "ephemeral filesystem" resets only affect
+local files (like the doctor photo — see note below), not your database.
+
+⚠️ **One remaining thing to know:** the doctor photo you upload from the
+admin dashboard (`public/assets/doctor.jpg`) is still a local file. On
+Render/Railway free tiers, it can reset to the last-deployed version after a
+redeploy or restart. If that happens, just re-upload it from the dashboard —
+takes 10 seconds. (If this becomes annoying, the long-term fix is to store
+the photo in Supabase Storage instead of the local filesystem — ask if you'd
+like this added.)
 
 ## Connecting your domain
 

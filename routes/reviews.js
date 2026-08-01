@@ -23,23 +23,28 @@ function validateReview(body) {
 }
 
 // GET /api/reviews — public, only visible reviews, newest first
-router.get('/', (req, res) => {
-  const reviews = listVisibleReviews(20);
-  res.json({ reviews });
+router.get('/', async (req, res) => {
+  try {
+    const reviews = await listVisibleReviews(20);
+    res.json({ reviews });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load reviews.' });
+  }
 });
 
 // POST /api/reviews — a patient submits their own review.
 // Goes live immediately (no admin approval needed), matching how the
 // clinic wants it — but the admin dashboard can hide/delete any review
 // afterwards if it's spam or inappropriate.
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const errors = validateReview(req.body);
   if (errors.length) {
     return res.status(400).json({ error: errors.join(' ') });
   }
 
   try {
-    const review = createReview({
+    const review = await createReview({
       patient_name: req.body.patient_name.trim(),
       city: (req.body.city || '').trim(),
       rating: Number(req.body.rating),

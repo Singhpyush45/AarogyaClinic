@@ -38,7 +38,7 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const appointment = createAppointment(req.body);
+    const appointment = await createAppointment(req.body);
 
     // 1) Real-time push to any connected admin dashboard
     const io = req.app.get('io');
@@ -57,43 +57,58 @@ router.post('/', async (req, res) => {
 // POST /api/appointments/lookup — patient checks their own status using
 // Appointment ID + phone number (both required, so people can't just guess
 // sequential codes and see someone else's private details)
-router.post('/lookup', (req, res) => {
-  const { appointment_code, phone } = req.body;
-  if (!appointment_code || !phone) {
-    return res.status(400).json({ error: 'Appointment ID and phone number are both required.' });
+router.post('/lookup', async (req, res) => {
+  try {
+    const { appointment_code, phone } = req.body;
+    if (!appointment_code || !phone) {
+      return res.status(400).json({ error: 'Appointment ID and phone number are both required.' });
+    }
+
+    const appointment = await getAppointmentByCode(appointment_code.trim().toUpperCase());
+
+    if (!appointment || appointment.phone.replace(/\s|-/g, '') !== phone.trim().replace(/\s|-/g, '')) {
+      return res.status(404).json({ error: 'No appointment found with that ID and phone number. Please double-check and try again.' });
+    }
+
+    res.json({ appointment });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
-
-  const appointment = getAppointmentByCode(appointment_code.trim().toUpperCase());
-
-  if (!appointment || appointment.phone.replace(/\s|-/g, '') !== phone.trim().replace(/\s|-/g, '')) {
-    return res.status(404).json({ error: 'No appointment found with that ID and phone number. Please double-check and try again.' });
-  }
-
-  res.json({ appointment });
 });
 
 // GET /api/appointments/:code  — used right after booking (same session, code freshly known)
-router.get('/:code', (req, res) => {
-  const appointment = getAppointmentByCode(req.params.code.toUpperCase());
-  if (!appointment) {
-    return res.status(404).json({ error: 'Appointment not found.' });
+router.get('/:code', async (req, res) => {
+  try {
+    const appointment = await getAppointmentByCode(req.params.code.toUpperCase());
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found.' });
+    }
+    res.json({ appointment });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
-  res.json({ appointment });
 });
 
 // GET /api/appointments/:code/receipt?phone=...  — download PDF receipt
 // Requires the phone number too, so receipts (which contain personal
 // details) can't be pulled just by guessing a sequential ID.
-router.get('/:code/receipt', (req, res) => {
-  const appointment = getAppointmentByCode(req.params.code.toUpperCase());
-  if (!appointment) {
-    return res.status(404).json({ error: 'Appointment not found.' });
+router.get('/:code/receipt', async (req, res) => {
+  try {
+    const appointment = await getAppointmentByCode(req.params.code.toUpperCase());
+    if (!appointment) {
+      return res.status(404).json({ error: 'Appointment not found.' });
+    }
+    const phone = (req.query.phone || '').trim().replace(/\s|-/g, '');
+    if (!phone || appointment.phone.replace(/\s|-/g, '') !== phone) {
+      return res.status(403).json({ error: 'Phone number does not match this appointment.' });
+    }
+    generateReceiptPDF(appointment, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
-  const phone = (req.query.phone || '').trim().replace(/\s|-/g, '');
-  if (!phone || appointment.phone.replace(/\s|-/g, '') !== phone) {
-    return res.status(403).json({ error: 'Phone number does not match this appointment.' });
-  }
-  generateReceiptPDF(appointment, res);
 });
 
 module.exports = router;
