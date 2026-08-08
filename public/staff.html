@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff Login | Aarogya Homeopathic Clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500,600,700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/admin.css">
+<style>
+  body{background:#131c15;}
+  .role-screen{
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+    background:
+      radial-gradient(circle at 15% 10%, rgba(199,138,63,.18), transparent 45%),
+      radial-gradient(circle at 85% 90%, rgba(109,143,112,.25), transparent 50%),
+      linear-gradient(160deg, #16211a 0%, #0f1712 100%);
+  }
+  .role-card-wrap{max-width:520px;width:100%;}
+  .login-card{
+    background:rgba(255,255,255,.98);
+    padding:44px 38px;border-radius:22px;box-shadow:0 30px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.05);
+    position:relative;overflow:hidden;
+  }
+  .login-card::before{
+    content:'';position:absolute;top:0;left:0;right:0;height:4px;
+    background:linear-gradient(90deg, var(--sage), var(--turmeric));
+  }
+  .brand-crest{
+    width:64px;height:64px;border-radius:16px;margin:0 auto 18px;
+    background:linear-gradient(150deg, var(--sage-deep), var(--sage));
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 10px 24px rgba(63,91,69,.35);
+  }
+  .brand-crest svg{width:32px;height:32px;}
+  .login-card h2{font-size:24px;letter-spacing:-.01em;}
+  .login-sub{font-size:13.5px;color:var(--ink-soft);margin-bottom:6px;}
+
+  .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:28px;}
+  .role-choice{
+    background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:24px 16px;text-align:center;cursor:pointer;
+    transition:border-color .2s, transform .2s, box-shadow .2s;position:relative;
+  }
+  .role-choice:hover{border-color:var(--sage);transform:translateY(-3px);box-shadow:0 14px 28px rgba(63,91,69,.14);}
+  .role-choice .icon-wrap{
+    width:44px;height:44px;border-radius:12px;margin:0 auto 12px;
+    background:var(--sage-soft);display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .role-choice:hover .icon-wrap{background:var(--sage);}
+  .role-choice .icon-wrap svg{width:22px;height:22px;stroke:var(--sage-deep);transition:stroke .2s;}
+  .role-choice:hover .icon-wrap svg{stroke:#fff;}
+  .role-choice .label{font-weight:700;font-size:13.5px;color:var(--sage-deep);letter-spacing:-.01em;}
+  .role-choice .sub{font-size:11px;color:var(--ink-soft);margin-top:3px;line-height:1.4;}
+
+  #staffLoginForm.login-form-active{margin-top:24px;}
+  .login-card input{border-radius:10px;border-color:var(--line);transition:border-color .15s, box-shadow .15s;}
+  .login-card input:focus{outline:none;border-color:var(--sage);box-shadow:0 0 0 3px rgba(109,143,112,.15);}
+  .login-card .btn{border-radius:10px;font-weight:700;letter-spacing:.01em;}
+
+  .signature-line{
+    display:flex;align-items:center;justify-content:center;gap:10px;margin-top:22px;
+    color:#b8c4b4;font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  }
+  .signature-line::before, .signature-line::after{content:'';flex:1;height:1px;background:var(--line);}
+
+  @media (max-width:480px){ .role-grid{grid-template-columns:1fr;} .login-card{padding:32px 22px;} }
+</style>
+</head>
+<body>
+
+<div class="role-screen">
+  <div class="role-card-wrap">
+    <div class="login-card">
+      <div class="brand-crest">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3v6M9 6h6M12 9c-4 0-7 3-7 7 0 3 2 5 7 5s7-2 7-5c0-4-3-7-7-7z"/>
+        </svg>
+      </div>
+      <h2 id="screenTitle" style="text-align:center;">Staff &amp; Admin Login</h2>
+      <p class="login-sub" style="text-align:center;">Aarogya Homeopathic Clinic — Team Access</p>
+
+      <!-- Role picker -->
+      <div id="rolePicker" class="role-grid">
+        <div class="role-choice" data-target="admin.html">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18M9 4v16"/></svg></div>
+          <div class="label">Clinic Admin</div>
+          <div class="sub">Appointments, reviews &amp; settings</div>
+        </div>
+        <div class="role-choice" data-role="doctor">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4v6a6 6 0 0012 0V4M6 4H4M18 4h2M6 4h4m4 0h4"/><circle cx="19" cy="17" r="3"/></svg></div>
+          <div class="label">Doctor</div>
+          <div class="sub">Queue, prescriptions &amp; analytics</div>
+        </div>
+        <div class="role-choice" data-role="reception">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5H5a2 2 0 00-2 2v10a2 2 0 002 2h4M9 5v14M9 5h10a2 2 0 012 2v3M15 15l4 4m0-4l-4 4"/></svg></div>
+          <div class="label">Reception</div>
+          <div class="sub">Patient intake</div>
+        </div>
+        <div class="role-choice" data-role="billing">
+          <div class="icon-wrap"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16v16H4z"/><path d="M8 9h8M8 13h5M8 17h8"/></svg></div>
+          <div class="label">Medical / Billing</div>
+          <div class="sub">Prescriptions &amp; bills</div>
+        </div>
+      </div>
+
+      <!-- Login form (hidden until a role is picked) -->
+      <form id="staffLoginForm" class="hidden">
+        <input type="text" name="username" placeholder="Username" required autocomplete="username">
+        <input type="password" name="password" placeholder="Password" required autocomplete="current-password">
+        <button type="submit" class="btn" id="staffLoginBtn" style="width:100%;">Log In</button>
+        <p class="login-msg" id="staffLoginMsg"></p>
+        <button type="button" class="back-link" id="backToRoles" style="background:none;border:none;cursor:pointer;display:block;margin:14px auto 0;">← Choose a different role</button>
+      </form>
+
+      <div class="signature-line">Secure Staff Access</div>
+      <a href="/" class="back-link" style="display:block;text-align:center;margin-top:10px;">← Back to Website</a>
+    </div>
+  </div>
+</div>
+
+<script src="js/staff-login.js"></script>
+</body>
+</html>

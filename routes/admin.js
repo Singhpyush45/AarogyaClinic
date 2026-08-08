@@ -5,8 +5,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const sharp = require('sharp');
-const path = require('path');
-const fs = require('fs');
 
 const { requireAdmin } = require('../middleware/auth');
 const {
@@ -19,6 +17,7 @@ const {
   updateReviewStatus,
   deleteReview,
 } = require('../db/database');
+const { setClinicAsset, listStaff, createStaff, setStaffActive, deleteStaff, getRecentAuditLog } = require('../db/clinic');
 const { generateReceiptPDF } = require('../utils/receipt');
 
 // ---- Photo upload setup ----
@@ -31,9 +30,6 @@ const upload = multer({
     else cb(new Error('Only JPG, PNG, or WEBP images are allowed.'));
   },
 });
-
-const ASSETS_DIR = path.join(__dirname, '..', 'public', 'assets');
-const PHOTO_PATH = path.join(ASSETS_DIR, 'doctor.jpg');
 
 // POST /api/admin/login
 router.post('/login', async (req, res) => {
@@ -108,6 +104,8 @@ router.patch('/appointments/:id/status', requireAdmin, async (req, res) => {
 });
 
 // POST /api/admin/doctor-photo — upload a new doctor photo
+// Stored in PostgreSQL (not the local filesystem) so it survives
+// Render/Railway redeploys, which wipe local files on free tiers.
 // Uses sharp to auto-correct orientation (fixes the "sideways photo" issue
 // that happens with phone photos) and resize for fast page loads.
 router.post('/doctor-photo', requireAdmin, (req, res, next) => {
@@ -129,13 +127,13 @@ router.post('/doctor-photo', requireAdmin, (req, res, next) => {
   }
 
   try {
-    if (!fs.existsSync(ASSETS_DIR)) fs.mkdirSync(ASSETS_DIR, { recursive: true });
-
-    await sharp(req.file.buffer)
+    const buffer = await sharp(req.file.buffer)
       .rotate() // auto-orient using the image's EXIF data, then strip it
       .resize(800, 1000, { fit: 'cover', position: 'top' })
       .jpeg({ quality: 85 })
-      .toFile(PHOTO_PATH);
+      .toBuffer();
+
+    await setClinicAsset('doctor_photo', buffer, 'image/jpeg');
 
     res.json({ success: true, updatedAt: Date.now() });
   } catch (err) {
@@ -215,6 +213,72 @@ router.get('/appointments/:id/receipt', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Could not generate receipt.' });
+  }
+});
+
+// ---- Clinic Staff Management (site admin creates Doctor/Reception/Billing accounts) ----
+
+// GET /api/admin/staff — list all staff accounts
+router.get('/staff', requireAdmin, async (req, res) => {
+  try {
+    res.json({ staff: await listStaff() });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load staff list.' });
+  }
+});
+
+// POST /api/admin/staff — create a new Doctor/Reception/Billing account
+router.post('/staff', requireAdmin, async (req, res) => {
+  try {
+    const { username, password, role } = req.body;
+    const allowedRoles = ['doctor', 'reception', 'billing'];
+    if (!username || !password || !allowedRoles.includes(role)) {
+      return res.status(400).json({ error: 'Username, password, and a valid role (doctor/reception/billing) are required.' });
+    }
+    if (password.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+    }
+    const staff = await createStaff({ username: username.trim(), password, role });
+    res.status(201).json({ success: true, staff });
+  } catch (err) {
+    if (err.code === '23505') { // unique violation
+      return res.status(400).json({ error: 'That username is already taken.' });
+    }
+    console.error(err);
+    res.status(500).json({ error: 'Could not create staff account.' });
+  }
+});
+
+// PATCH /api/admin/staff/:id/active — enable/disable a staff account
+router.patch('/staff/:id/active', requireAdmin, async (req, res) => {
+  try {
+    await setStaffActive(req.params.id, req.body.active !== false);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not update staff account.' });
+  }
+});
+
+// DELETE /api/admin/staff/:id — permanently delete a staff account
+router.delete('/staff/:id', requireAdmin, async (req, res) => {
+  try {
+    await deleteStaff(req.params.id);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not delete staff account.' });
+  }
+});
+
+// GET /api/admin/audit-log — recent clinic staff activity (for oversight)
+router.get('/audit-log', requireAdmin, async (req, res) => {
+  try {
+    res.json({ log: await getRecentAuditLog(100) });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Could not load activity log.' });
   }
 });
 

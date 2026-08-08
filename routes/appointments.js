@@ -5,6 +5,7 @@ const router = express.Router();
 const {
   createAppointment,
   getAppointmentByCode,
+  listAppointmentsByPhone,
 } = require('../db/database');
 const { generateReceiptPDF } = require('../utils/receipt');
 const { notifyClinicOfNewAppointment } = require('../utils/mailer');
@@ -51,6 +52,25 @@ router.post('/', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Could not book appointment. Please try again.' });
+  }
+});
+
+// POST /api/appointments/lookup-by-phone — patient only needs their phone
+// number (no appointment ID needed). Returns all appointments for that phone.
+router.post('/lookup-by-phone', async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone || !phone.trim()) {
+      return res.status(400).json({ error: 'Phone number is required.' });
+    }
+    const appointments = await listAppointmentsByPhone(phone.trim());
+    if (!appointments.length) {
+      return res.status(404).json({ error: 'No appointments found for that phone number.' });
+    }
+    res.json({ appointments });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Something went wrong. Please try again.' });
   }
 });
 

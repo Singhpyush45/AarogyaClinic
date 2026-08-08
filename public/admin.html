@@ -27,92 +27,167 @@
 </div>
 
 <!-- DASHBOARD -->
-<div id="dashboard" class="dashboard hidden">
-  <header class="dash-header">
-    <div class="brand"><div class="brand-mark">आ</div><span>Aarogya Admin</span></div>
-    <div class="header-right">
-      <span class="live-dot"></span><span class="live-text">Live</span>
-      <button class="btn-outline" id="logoutBtn">Log Out</button>
-    </div>
-  </header>
+<div id="dashboard" class="dashboard hidden app-shell">
 
-  <main class="dash-main">
-    <div class="stats-grid">
-      <div class="stat-box"><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total Appointments</div></div>
-      <div class="stat-box"><div class="stat-num" id="statPending">0</div><div class="stat-lbl">Pending</div></div>
-      <div class="stat-box"><div class="stat-num" id="statConfirmed">0</div><div class="stat-lbl">Confirmed</div></div>
-      <div class="stat-box"><div class="stat-num" id="statToday">0</div><div class="stat-lbl">Today's Bookings</div></div>
+  <aside class="app-sidebar" id="appSidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">आ</div>
+      <span class="sidebar-title">Aarogya Admin</span>
     </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" data-scroll="apptSection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Dashboard
+      </button>
+      <button class="sidebar-link" data-scroll="photoSection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        Doctor Photo
+      </button>
+      <button class="sidebar-link" data-scroll="reviewsSection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Reviews
+      </button>
+      <button class="sidebar-link" data-scroll="staffSection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Clinic Staff
+      </button>
+      <button class="sidebar-link" data-scroll="activitySection">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+        Activity Log
+      </button>
+    </nav>
+    <div class="sidebar-tagline-card">
+      <div class="tagline-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      <h4>Compassion. Care. Commitment.</h4>
+      <p>Delivering better health outcomes every day.</p>
+    </div>
+  </aside>
 
-    <div class="toolbar">
-      <input type="text" id="searchInput" placeholder="Search by name, phone, or ID…">
-      <select id="statusFilter">
-        <option value="">All Statuses</option>
-        <option value="pending">Pending</option>
-        <option value="confirmed">Confirmed</option>
-        <option value="completed">Completed</option>
-        <option value="cancelled">Cancelled</option>
-      </select>
-      <button class="btn-outline" id="refreshBtn">Refresh</button>
-    </div>
-
-    <div class="table-wrap">
-      <table id="apptTable">
-        <thead>
-          <tr>
-            <th>ID</th><th>Patient</th><th>Phone</th><th>Date</th><th>Time</th><th>Concern</th><th>Status</th><th>Receipt</th><th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="apptTbody">
-          <tr><td colspan="9" class="empty-row">Loading appointments…</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- ---- Doctor Photo ---- -->
-    <div class="panel-head">
-      <h2>Doctor Photo</h2>
-      <p>Upload a new photo any time — it updates on the website instantly.</p>
-    </div>
-    <div class="photo-card">
-      <img id="currentDoctorPhoto" src="assets/doctor.jpg" alt="Current doctor photo">
-      <div class="photo-upload-area">
-        <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" class="hidden">
-        <button class="btn-outline" id="choosePhotoBtn">Choose New Photo</button>
-        <span id="photoFileName" class="photo-filename"></span>
-        <button class="btn" id="uploadPhotoBtn" disabled>Upload Photo</button>
-        <p class="form-msg" id="photoMsg"></p>
-        <p class="photo-hint">JPG, PNG or WEBP · max 5MB · will be auto-cropped to a portrait frame</p>
+  <div class="app-content">
+    <header class="dash-header">
+      <button class="mobile-sidebar-toggle" id="mobileSidebarToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand"><span style="font-family:'Fraunces',serif;font-size:16px;color:var(--sage-deep);font-weight:600;">Dashboard</span></div>
+      <div class="header-right">
+        <span class="live-indicator"><span class="live-dot"></span>Live</span>
+        <button class="btn-outline" id="logoutBtn">Log Out</button>
       </div>
-    </div>
+    </header>
 
-    <!-- ---- Reviews ---- -->
-    <div class="panel-head">
-      <h2>Patient Reviews</h2>
-      <p>Reviews patients submit on the website appear here automatically and go live immediately. Hide or delete anything inappropriate. You can also add a review yourself (e.g. one collected over phone/WhatsApp).</p>
-    </div>
-    <div class="toolbar">
-      <button class="btn-outline" id="addReviewToggleBtn">+ Add Review Manually</button>
-    </div>
-    <form id="adminReviewForm" class="admin-review-form hidden">
-      <div class="form-row-admin">
-        <input type="text" name="patient_name" placeholder="Patient Name *" required>
-        <input type="text" name="city" placeholder="City">
-        <select name="rating">
-          <option value="5">★★★★★ (5)</option>
-          <option value="4">★★★★☆ (4)</option>
-          <option value="3">★★★☆☆ (3)</option>
-          <option value="2">★★☆☆☆ (2)</option>
-          <option value="1">★☆☆☆☆ (1)</option>
+    <main class="dash-main">
+      <div id="apptSection">
+      <div class="stats-grid">
+        <div class="stat-box"><div class="stat-icon c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="stat-num" id="statTotal">0</div><div class="stat-lbl">Total Appointments</div></div>
+        <div class="stat-box"><div class="stat-icon c-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="stat-num" id="statPending">0</div><div class="stat-lbl">Pending</div></div>
+        <div class="stat-box"><div class="stat-icon c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="stat-num" id="statConfirmed">0</div><div class="stat-lbl">Confirmed</div></div>
+        <div class="stat-box"><div class="stat-icon c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div class="stat-num" id="statToday">0</div><div class="stat-lbl">Today's Bookings</div></div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Search by name, phone, or ID…">
+        <select id="statusFilter">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="confirmed">Confirmed</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
         </select>
+        <button class="btn-outline" id="refreshBtn">Refresh</button>
       </div>
-      <textarea name="review_text" placeholder="Review text *" rows="2" required></textarea>
-      <button type="submit" class="btn">Add Review</button>
-    </form>
-    <div class="reviews-list" id="reviewsAdminList">
-      <p class="empty-row">Loading reviews…</p>
-    </div>
-  </main>
+
+      <div class="table-wrap">
+        <table id="apptTable">
+          <thead>
+            <tr>
+              <th>ID</th><th>Patient</th><th>Phone</th><th>Date</th><th>Time</th><th>Concern</th><th>Status</th><th>Receipt</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="apptTbody">
+            <tr><td colspan="9" class="empty-row">Loading appointments…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      </div>
+
+      <!-- ---- Doctor Photo ---- -->
+      <div class="panel-head" id="photoSection">
+        <h2>Doctor Photo</h2>
+        <p>Upload a new photo any time — it updates on the website instantly.</p>
+      </div>
+      <div class="photo-card">
+        <img id="currentDoctorPhoto" src="/api/doctor-photo" alt="Current doctor photo">
+        <div class="photo-upload-area">
+          <input type="file" id="photoInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+          <button class="btn-outline" id="choosePhotoBtn">Choose New Photo</button>
+          <span id="photoFileName" class="photo-filename"></span>
+          <button class="btn" id="uploadPhotoBtn" disabled>Upload Photo</button>
+          <p class="form-msg" id="photoMsg"></p>
+          <p class="photo-hint">JPG, PNG or WEBP · max 5MB · will be auto-cropped to a portrait frame</p>
+        </div>
+      </div>
+
+      <!-- ---- Reviews ---- -->
+      <div class="panel-head" id="reviewsSection">
+        <h2>Patient Reviews</h2>
+        <p>Reviews patients submit on the website appear here automatically and go live immediately. Hide or delete anything inappropriate. You can also add a review yourself (e.g. one collected over phone/WhatsApp).</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn-outline" id="addReviewToggleBtn">+ Add Review Manually</button>
+      </div>
+      <form id="adminReviewForm" class="admin-review-form hidden">
+        <div class="form-row-admin">
+          <input type="text" name="patient_name" placeholder="Patient Name *" required>
+          <input type="text" name="city" placeholder="City">
+          <select name="rating">
+            <option value="5">★★★★★ (5)</option>
+            <option value="4">★★★★☆ (4)</option>
+            <option value="3">★★★☆☆ (3)</option>
+            <option value="2">★★☆☆☆ (2)</option>
+            <option value="1">★☆☆☆☆ (1)</option>
+          </select>
+        </div>
+        <textarea name="review_text" placeholder="Review text *" rows="2" required></textarea>
+        <button type="submit" class="btn">Add Review</button>
+      </form>
+      <div class="reviews-list" id="reviewsAdminList">
+        <p class="empty-row">Loading reviews…</p>
+      </div>
+
+      <!-- ---- Clinic Staff Management ---- -->
+      <div class="panel-head" id="staffSection">
+        <h2>Clinic Staff (Doctor / Reception / Billing)</h2>
+        <p>Create login accounts for your clinic team. They'll sign in separately at <code>/staff.html</code> with their own dashboards.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn-outline" id="addStaffToggleBtn">+ Add Staff Account</button>
+      </div>
+      <form id="addStaffForm" class="admin-review-form hidden">
+        <div class="form-row-admin">
+          <input type="text" name="username" placeholder="Username *" required>
+          <input type="password" name="password" placeholder="Password (min 6 chars) *" required minlength="6">
+          <select name="role" required>
+            <option value="">Role *</option>
+            <option value="doctor">Doctor</option>
+            <option value="reception">Reception</option>
+            <option value="billing">Medical / Billing</option>
+          </select>
+        </div>
+        <button type="submit" class="btn">Create Account</button>
+        <p class="form-msg" id="addStaffMsg"></p>
+      </form>
+      <div class="reviews-list" id="staffList">
+        <p class="empty-row">Loading staff…</p>
+      </div>
+
+      <!-- ---- Activity Log ---- -->
+      <div class="panel-head" id="activitySection">
+        <h2>Recent Activity</h2>
+        <p>A log of key actions across the clinic system — patient intake, prescriptions saved, and bills generated.</p>
+      </div>
+      <div class="reviews-list" id="auditLogList">
+        <p class="empty-row">Loading activity…</p>
+      </div>
+    </main>
+  </div>
 </div>
 
 <!-- toast for new appointment notifications -->
@@ -120,5 +195,21 @@
 
 <script src="/socket.io/socket.io.js"></script>
 <script src="js/admin.js"></script>
+<script>
+  document.querySelectorAll('.sidebar-link[data-scroll]').forEach((link) => {
+    link.addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-link').forEach((l) => l.classList.remove('active'));
+      link.classList.add('active');
+      const target = document.getElementById(link.dataset.scroll);
+      if (target && target.scrollIntoView) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  });
+  const mobileToggle = document.getElementById('mobileSidebarToggle');
+  if (mobileToggle) {
+    mobileToggle.addEventListener('click', () => {
+      document.getElementById('appSidebar').classList.toggle('mobile-open');
+    });
+  }
+</script>
 </body>
 </html>

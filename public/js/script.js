@@ -43,7 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     .then((r) => r.json())
     .then(({ updatedAt }) => {
       const img = document.getElementById('doctorPhoto');
-      if (img && updatedAt) img.src = `assets/doctor.jpg?v=${updatedAt}`;
+      if (img && updatedAt) img.src = `/api/doctor-photo?v=${updatedAt}`;
     })
     .catch(() => {});
 
@@ -274,30 +274,35 @@ document.addEventListener('DOMContentLoaded', () => {
     statusSubmitBtn.textContent = 'Checking…';
 
     try {
-      const res = await fetch('/api/appointments/lookup', {
+      const res = await fetch('/api/appointments/lookup-by-phone', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Could not find that appointment.');
+      if (!res.ok) throw new Error(data.error || 'Could not find any appointments.');
 
-      const appt = data.appointment;
-      const label = statusLabels[appt.status] || appt.status;
-
-      statusResult.innerHTML = `
-        <span class="status-badge-lg ${appt.status}">${label}</span>
-        <div class="sr-row"><span class="k">Appointment ID</span><span class="v">${escapeHtml(appt.appointment_code)}</span></div>
-        <div class="sr-row"><span class="k">Name</span><span class="v">${escapeHtml(appt.patient_name)}</span></div>
-        <div class="sr-row"><span class="k">Date</span><span class="v">${escapeHtml(appt.preferred_date)}</span></div>
-        <div class="sr-row"><span class="k">Time</span><span class="v">${escapeHtml(appt.preferred_time)}</span></div>
-        <p class="sr-note">${statusNotes[appt.status] || ''}</p>
-        <button class="btn" id="statusDownloadBtn">Download Receipt PDF</button>
-      `;
+      statusResult.innerHTML = data.appointments.map((appt) => {
+        const label = statusLabels[appt.status] || appt.status;
+        return `
+          <div style="border-bottom:1px solid var(--line);padding:14px 0;">
+            <span class="status-badge-lg ${appt.status}">${label}</span>
+            <div class="sr-row"><span class="k">Appointment ID</span><span class="v">${escapeHtml(appt.appointment_code)}</span></div>
+            <div class="sr-row"><span class="k">Name</span><span class="v">${escapeHtml(appt.patient_name)}</span></div>
+            <div class="sr-row"><span class="k">Date</span><span class="v">${escapeHtml(appt.preferred_date)}</span></div>
+            <div class="sr-row"><span class="k">Time</span><span class="v">${escapeHtml(appt.preferred_time)}</span></div>
+            <p class="sr-note">${statusNotes[appt.status] || ''}</p>
+            <button class="btn status-download-btn" data-code="${escapeHtml(appt.appointment_code)}" data-phone="${escapeHtml(appt.phone)}">Download Receipt PDF</button>
+          </div>
+        `;
+      }).join('');
+      statusResult.querySelector('div:last-child').style.borderBottom = 'none';
       statusResult.classList.remove('hidden');
 
-      document.getElementById('statusDownloadBtn').addEventListener('click', () => {
-        window.open(`/api/appointments/${appt.appointment_code}/receipt?phone=${encodeURIComponent(appt.phone)}`, '_blank');
+      statusResult.querySelectorAll('.status-download-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          window.open(`/api/appointments/${btn.dataset.code}/receipt?phone=${encodeURIComponent(btn.dataset.phone)}`, '_blank');
+        });
       });
     } catch (err) {
       statusMsg.textContent = err.message;
@@ -305,6 +310,58 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       statusSubmitBtn.disabled = false;
       statusSubmitBtn.textContent = 'Check Status';
+    }
+  });
+
+  // ---- Download Your Bill ----
+  const billForm = document.getElementById('billForm');
+  const billLookupMsg = document.getElementById('billLookupMsg');
+  const billResult = document.getElementById('billResult');
+  const billSubmitBtn = document.getElementById('billSubmitBtn');
+
+  billForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    billLookupMsg.textContent = '';
+    billLookupMsg.className = 'form-msg';
+    billResult.classList.add('hidden');
+
+    const payload = Object.fromEntries(new FormData(billForm).entries());
+    billSubmitBtn.disabled = true;
+    billSubmitBtn.textContent = 'Searching…';
+
+    try {
+      const res = await fetch('/api/bills/lookup-by-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not find any bills.');
+
+      billResult.innerHTML = data.bills.map((bill) => `
+        <div style="border-bottom:1px solid var(--line);padding:14px 0;">
+          <span class="status-badge-lg confirmed">Bill Found</span>
+          <div class="sr-row"><span class="k">Bill Number</span><span class="v">${escapeHtml(bill.bill_number)}</span></div>
+          <div class="sr-row"><span class="k">Patient</span><span class="v">${escapeHtml(bill.patient_name)}</span></div>
+          <div class="sr-row"><span class="k">Date</span><span class="v">${new Date(bill.created_at).toLocaleDateString('en-GB')}</span></div>
+          <div class="sr-row"><span class="k">Grand Total</span><span class="v">₹${Number(bill.grand_total).toFixed(2)}</span></div>
+          <button class="btn bill-download-btn" data-id="${bill.id}">Download Bill PDF</button>
+        </div>
+      `).join('');
+      billResult.querySelector('div:last-child').style.borderBottom = 'none';
+      billResult.classList.remove('hidden');
+
+      billResult.querySelectorAll('.bill-download-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          window.open(`/api/bills/by-id/${btn.dataset.id}/pdf?phone=${encodeURIComponent(payload.phone)}`, '_blank');
+        });
+      });
+    } catch (err) {
+      billLookupMsg.textContent = err.message;
+      billLookupMsg.className = 'form-msg error';
+    } finally {
+      billSubmitBtn.disabled = false;
+      billSubmitBtn.textContent = 'Find Bill';
     }
   });
 });

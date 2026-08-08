@@ -78,6 +78,7 @@ logoutBtn.addEventListener('click', () => {
 async function authFetch(url, opts = {}) {
   const res = await fetch(url, {
     ...opts,
+    cache: 'no-store',
     headers: {
       ...(opts.headers || {}),
       Authorization: `Bearer ${TOKEN}`,
@@ -135,7 +136,7 @@ function renderTable(rows) {
       (a) => `
     <tr data-id="${a.id}">
       <td>${a.appointment_code}</td>
-      <td>${escapeHtml(a.patient_name)}${a.age ? `, ${a.age}` : ''}${a.gender ? ` (${a.gender[0]})` : ''}</td>
+      <td><span class="patient-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>${escapeHtml(a.patient_name)}${a.age ? `, ${a.age}` : ''}${a.gender ? ` (${a.gender[0]})` : ''}</td>
       <td>${escapeHtml(a.phone)}</td>
       <td>${a.preferred_date}</td>
       <td>${a.preferred_time}</td>
@@ -205,7 +206,7 @@ function loadDoctorPhoto() {
   fetch('/api/doctor-photo-meta')
     .then((r) => r.json())
     .then(({ updatedAt }) => {
-      if (updatedAt) currentDoctorPhoto.src = `assets/doctor.jpg?v=${updatedAt}`;
+      if (updatedAt) currentDoctorPhoto.src = `/api/doctor-photo?v=${updatedAt}`;
     })
     .catch(() => {});
 }
@@ -239,7 +240,7 @@ uploadPhotoBtn.addEventListener('click', async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Upload failed.');
 
-    currentDoctorPhoto.src = `assets/doctor.jpg?v=${data.updatedAt}`;
+    currentDoctorPhoto.src = `/api/doctor-photo?v=${data.updatedAt}`;
     photoMsg.textContent = 'Photo updated! It is now live on the website.';
     photoMsg.className = 'form-msg success';
     photoInput.value = '';
@@ -389,3 +390,117 @@ function playBeep() {
     // ignore if audio isn't available
   }
 }
+
+// ---------------- Clinic Staff Management ----------------
+const addStaffToggleBtn = document.getElementById('addStaffToggleBtn');
+const addStaffForm = document.getElementById('addStaffForm');
+const addStaffMsg = document.getElementById('addStaffMsg');
+const staffListEl = document.getElementById('staffList');
+
+if (addStaffToggleBtn) {
+  addStaffToggleBtn.addEventListener('click', () => addStaffForm.classList.toggle('hidden'));
+
+  addStaffForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    addStaffMsg.textContent = '';
+    const payload = Object.fromEntries(new FormData(addStaffForm).entries());
+    try {
+      const res = await authFetch(`${API}/staff`, { method: 'POST', body: JSON.stringify(payload) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not create account.');
+      addStaffForm.reset();
+      addStaffForm.classList.add('hidden');
+      loadStaffList();
+    } catch (err) {
+      addStaffMsg.textContent = err.message;
+      addStaffMsg.className = 'form-msg error';
+    }
+  });
+
+  async function loadStaffList() {
+    staffListEl.innerHTML = `<p class="empty-row">Loading staff…</p>`;
+    try {
+      const res = await authFetch(`${API}/staff`);
+      const { staff } = await res.json();
+      if (!staff.length) {
+        staffListEl.innerHTML = `<p class="empty-row">No staff accounts yet.</p>`;
+        return;
+      }
+      staffListEl.innerHTML = staff.map((s) => `
+        <div class="review-item ${!s.active ? 'hidden-review' : ''}">
+          <div class="review-item-body">
+            <span class="r-name">${escapeHtml(s.full_name || s.username)}</span>
+            <span class="r-city">@${escapeHtml(s.username)} · ${escapeHtml(s.role)}</span>
+            <div class="r-meta">${s.active ? 'Active' : 'Disabled'} · created ${new Date(s.created_at).toLocaleDateString()}</div>
+          </div>
+          <div class="review-item-actions">
+            <button class="toggle-staff-btn" data-id="${s.id}" data-active="${s.active}">${s.active ? 'Disable' : 'Enable'}</button>
+            <button class="delete-staff-btn" data-id="${s.id}" data-name="${escapeHtml(s.full_name || s.username)}">Delete</button>
+          </div>
+        </div>
+      `).join('');
+
+      document.querySelectorAll('.toggle-staff-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const newActive = btn.dataset.active !== 'true';
+          await authFetch(`${API}/staff/${btn.dataset.id}/active`, { method: 'PATCH', body: JSON.stringify({ active: newActive }) });
+          loadStaffList();
+        });
+      });
+
+      document.querySelectorAll('.delete-staff-btn').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          if (!confirm(`Permanently delete "${btn.dataset.name}"'s account? This cannot be undone — their past visits/bills stay on record, but they will no longer be able to log in.`)) return;
+          try {
+            const res = await authFetch(`${API}/staff/${btn.dataset.id}`, { method: 'DELETE' });
+            if (!res.ok) {
+              const data = await res.json();
+              throw new Error(data.error || 'Could not delete account.');
+            }
+            loadStaffList();
+          } catch (err) {
+            alert(err.message);
+          }
+        });
+      });
+    } catch (err) {
+      staffListEl.innerHTML = `<p class="empty-row">Could not load staff.</p>`;
+    }
+  }
+
+  loadStaffList();
+}
+
+// ---------------- Activity Log ----------------
+async function loadAuditLog() {
+  const el = document.getElementById('auditLogList');
+  if (!el) return;
+  el.innerHTML = `<p class="empty-row">Loading activity…</p>`;
+  try {
+    const res = await authFetch(`${API}/audit-log`);
+    const { log } = await res.json();
+    if (!log.length) {
+      el.innerHTML = `<p class="empty-row">No activity yet.</p>`;
+      return;
+    }
+    const ACTION_LABELS = {
+      patient_intake: '📋 Patient registered',
+      prescription_saved: '🩺 Prescription saved',
+      bill_generated: '🧾 Bill generated',
+      attachment_uploaded: '📎 File attached',
+    };
+    el.innerHTML = log.map((entry) => `
+      <div class="review-item">
+        <div class="review-item-body">
+          <span class="r-name">${ACTION_LABELS[entry.action] || entry.action}</span>
+          <span class="r-city">${entry.username ? '@' + escapeHtml(entry.username) : ''} ${entry.role ? '(' + escapeHtml(entry.role) + ')' : ''}</span>
+          <div class="r-text" style="font-size:12.5px;">${escapeHtml(entry.details || '')}</div>
+          <div class="r-meta">${new Date(entry.created_at).toLocaleString()}</div>
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    el.innerHTML = `<p class="empty-row">Could not load activity log.</p>`;
+  }
+}
+loadAuditLog();

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Doctor Dashboard | Aarogya Homeopathic Clinic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500,600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/clinic.css">
+</head>
+<body>
+
+<div class="app-shell">
+  <aside class="app-sidebar sidebar-dark" id="appSidebar">
+    <div class="sidebar-brand">
+      <div class="brand-mark">आ</div>
+      <span class="sidebar-title">Doctor</span>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="sidebar-link active" id="navQueue">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Queue
+      </button>
+      <button class="sidebar-link" id="navHistory">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        History
+      </button>
+      <button class="sidebar-link" id="navAnalytics">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-4"/></svg>
+        Analytics
+      </button>
+      <button class="sidebar-link" id="navProfile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        My Profile
+      </button>
+    </nav>
+    <div class="sidebar-tagline-card">
+      <div class="tagline-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 10-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg></div>
+      <h4>Compassion. Care. Commitment.</h4>
+      <p>Delivering healthier tomorrows.</p>
+    </div>
+  </aside>
+
+  <div class="app-content">
+    <header class="clinic-header">
+      <button class="mobile-sidebar-toggle" id="mobileSidebarToggle"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+      <div class="brand">
+        <div>
+          <div style="font-family:'Fraunces',serif;font-size:21px;color:var(--sage-deep);font-weight:700;line-height:1.2;">Doctor Dashboard</div>
+          <div id="welcomeMsg" style="font-size:12.5px;color:var(--ink-soft);margin-top:2px;">Welcome back</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="role-tag">Doctor</span>
+        <span id="staffNameDisplay" style="font-size:13px;color:var(--ink-soft);"></span>
+        <button class="profile-avatar-btn" id="profileBtn">👤</button>
+        <button class="btn-outline btn-sm" id="logoutBtn">Log Out</button>
+      </div>
+    </header>
+
+    <main class="clinic-main">
+
+      <!-- QUEUE VIEW -->
+      <div id="queueView">
+        <div class="page-title">
+          <h1>Doctor Dashboard</h1>
+          <div class="pill-btn-row">
+            <button class="btn-outline btn-sm tab-btn active" id="tabQueueBtn">Queue</button>
+            <button class="btn-outline btn-sm tab-btn" id="tabHistoryBtn">History</button>
+            <button class="btn-outline btn-sm tab-btn" id="tabAnalyticsBtn">Analytics</button>
+            <button class="btn-outline btn-sm" id="refreshQueueBtn">Refresh</button>
+          </div>
+        </div>
+        <div id="queueTabContent">
+          <div class="stats-row">
+            <div class="stat-box"><div class="stat-icon c-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="num" id="statQueue">-</div><div class="lbl">Waiting Now</div></div>
+            <div class="stat-box"><div class="stat-icon c-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></div><div class="num" id="statSeenToday">-</div><div class="lbl">Seen Today</div></div>
+            <div class="stat-box"><div class="stat-icon c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><div class="num" id="statTotalSeen">-</div><div class="lbl">Total Patients Seen</div></div>
+          </div>
+          <div class="queue-list" id="queueList"><p class="empty-state">Loading queue…</p></div>
+        </div>
+
+        <div id="historyTabContent" class="hidden">
+          <div class="date-filter-row" id="doctorHistoryFilter">
+            <select id="doctorHistoryRange">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="this_month">This Month</option>
+              <option value="3_months">Last 3 Months</option>
+              <option value="6_months">Last 6 Months</option>
+              <option value="1_year">Last 1 Year</option>
+              <option value="2_years">Last 2 Years</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <input type="date" id="doctorHistoryFrom" class="hidden">
+            <input type="date" id="doctorHistoryTo" class="hidden">
+            <button class="btn-outline btn-sm" id="doctorHistoryGoBtn">Show</button>
+          </div>
+          <div class="queue-list" id="doctorHistoryList"><p class="empty-state">Select a date range above.</p></div>
+        </div>
+
+        <div id="analyticsTabContent" class="hidden">
+          <div class="date-filter-row" id="doctorAnalyticsFilter">
+            <select id="doctorAnalyticsRange">
+              <option value="today">Today</option>
+              <option value="yesterday">Yesterday</option>
+              <option value="this_week">This Week</option>
+              <option value="this_month" selected>This Month</option>
+              <option value="3_months">Last 3 Months</option>
+              <option value="6_months">Last 6 Months</option>
+              <option value="1_year">Last 1 Year</option>
+              <option value="2_years">Last 2 Years</option>
+              <option value="custom">Custom Range</option>
+            </select>
+            <input type="date" id="doctorAnalyticsFrom" class="hidden">
+            <input type="date" id="doctorAnalyticsTo" class="hidden">
+            <button class="btn-outline btn-sm" id="doctorAnalyticsGoBtn">Show</button>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat-box accent-border green"><div class="num" id="anaPatients">-</div><div class="lbl">Patients Seen</div></div>
+            <div class="stat-box accent-border"><div class="num" id="anaConsultingFee">-</div><div class="lbl">Consulting Fee Revenue</div></div>
+            <div class="stat-box accent-border orange"><div class="num" id="anaMedicineRevenue">-</div><div class="lbl">Medicine Sales Revenue</div></div>
+            <div class="stat-box accent-border blue"><div class="num" id="anaTotalRevenue">-</div><div class="lbl">Total Revenue</div></div>
+          </div>
+
+          <div class="charts-grid">
+            <div class="form-card">
+              <h3>Revenue Over Time</h3>
+              <div class="chart-box"><canvas id="revenueChart"></canvas></div>
+            </div>
+            <div class="form-card">
+              <h3>Patients Over Time</h3>
+              <div class="chart-box"><canvas id="patientsChart"></canvas></div>
+            </div>
+            <div class="form-card">
+              <h3>Revenue Split</h3>
+              <div class="chart-box"><canvas id="revenueSplitChart"></canvas></div>
+            </div>
+            <div class="form-card">
+              <h3>Top Medicines Sold</h3>
+              <div class="chart-box"><canvas id="topMedicinesChart"></canvas></div>
+            </div>
+          </div>
+          <p class="login-msg" id="analyticsErrorMsg"></p>
+
+          <div class="form-card">
+            <h3>Consulting Fee</h3>
+            <p style="font-size:12.5px;color:var(--ink-soft);margin-bottom:10px;">This fee is added automatically to every bill until you change it here.</p>
+            <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+              <div class="field" style="max-width:180px;">
+                <label>Consulting Fee (₹)</label>
+                <input type="number" min="0" step="1" id="consultingFeeInput">
+              </div>
+              <button class="btn" id="saveConsultingFeeBtn">Save</button>
+              <span class="login-msg" id="consultingFeeMsg"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRESCRIPTION VIEW -->
+      <div id="rxView" class="hidden">
+        <div class="page-title">
+          <h1 id="rxPatientName">Patient</h1>
+          <button class="btn-outline btn-sm" id="backToQueueBtn">← Back to Queue</button>
+        </div>
+        <div class="form-card" id="patientHeaderCard"></div>
+
+        <div class="form-card">
+          <h3>Prescription Mode</h3>
+          <div style="display:flex;gap:10px;">
+            <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer;">
+              <input type="radio" name="rxMode" value="digital" id="modeDigital" checked> Digital Rx
+            </label>
+            <label style="display:flex;align-items:center;gap:6px;font-size:13.5px;cursor:pointer;">
+              <input type="radio" name="rxMode" value="photo" id="modePhoto"> Photo Rx (upload handwritten prescription)
+            </label>
+          </div>
+        </div>
+
+        <div id="digitalRxWrap" class="rx-layout">
+          <div class="rx-nav" id="rxNav"></div>
+          <div id="rxSections"></div>
+        </div>
+
+        <div id="photoRxWrap" class="form-card hidden">
+          <h3>Upload Prescription Photo</h3>
+          <input type="file" id="photoRxInput" accept="image/jpeg,image/png,image/webp" class="hidden">
+          <button type="button" class="btn-outline" id="choosePhotoRxBtn">Choose / Capture Photo</button>
+          <span id="photoRxFileName" style="font-size:12px;color:var(--ink-soft);margin-left:10px;"></span>
+          <div id="photoRxPreview" style="margin-top:14px;"></div>
+          <p style="font-size:11.5px;color:var(--ink-soft);margin-top:8px;">JPG, PNG or WEBP · max 8MB</p>
+        </div>
+
+        <div class="form-card">
+          <h3>Medication</h3>
+          <div class="med-search-row field">
+            <label>Search or type medicine name</label>
+            <input type="text" id="medSearchInput" placeholder="Start typing medicine name…" autocomplete="off">
+            <div class="med-suggestions hidden" id="medSuggestions"></div>
+          </div>
+          <div id="medList"></div>
+          <button type="button" class="btn-outline btn-sm" id="addCustomMedBtn">+ Add typed medicine</button>
+        </div>
+
+        <div class="form-card">
+          <h3>Attachments <span style="font-size:11px;color:var(--ink-soft);font-weight:400;">(lab reports, documents — separate from Photo Rx)</span></h3>
+          <input type="file" id="attachmentInput" accept="image/jpeg,image/png,image/webp,application/pdf" class="hidden">
+          <button type="button" class="btn-outline btn-sm" id="addAttachmentBtn">+ Add File</button>
+          <div id="attachmentsList" style="margin-top:12px;"></div>
+        </div>
+
+        <div class="form-card">
+          <button class="btn" id="saveRxBtn" style="width:100%;padding:14px;font-size:15px;">Save Prescription &amp; Send to Billing</button>
+          <p class="login-msg" id="rxMsg"></p>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<script src="js/vendor/chart.umd.min.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="js/clinic-common.js"></script>
+<script src="js/doctor.js"></script>
+<script>
+  // Sidebar nav wiring — reuses existing tab buttons' logic, no duplicate handlers
+  document.getElementById('navQueue').addEventListener('click', () => document.getElementById('tabQueueBtn').click());
+  document.getElementById('navHistory').addEventListener('click', () => document.getElementById('tabHistoryBtn').click());
+  document.getElementById('navAnalytics').addEventListener('click', () => document.getElementById('tabAnalyticsBtn').click());
+  document.getElementById('navProfile').addEventListener('click', () => document.getElementById('profileBtn').click());
+  ['navQueue','navHistory','navAnalytics'].forEach((id) => {
+    document.getElementById(id).addEventListener('click', () => {
+      document.querySelectorAll('.sidebar-link').forEach((l) => l.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    });
+  });
+  document.getElementById('mobileSidebarToggle').addEventListener('click', () => {
+    document.getElementById('appSidebar').classList.toggle('mobile-open');
+  });
+</script>
+</body>
+</html>

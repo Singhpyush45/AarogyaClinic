@@ -120,6 +120,16 @@ async function getAppointmentByCode(code) {
   return rows[0] || null;
 }
 
+// Public, phone-only lookup — returns ALL appointments for that phone
+// number (a patient may have booked more than once), newest first.
+async function listAppointmentsByPhone(phone) {
+  const { rows } = await pool.query(
+    `SELECT * FROM appointments WHERE phone = $1 ORDER BY created_at DESC`,
+    [phone.trim()]
+  );
+  return rows;
+}
+
 async function listAppointments({ status, date, search } = {}) {
   let query = `SELECT * FROM appointments WHERE 1=1`;
   const params = [];
@@ -209,6 +219,7 @@ module.exports = {
   createAppointment,
   getAppointmentById,
   getAppointmentByCode,
+  listAppointmentsByPhone,
   listAppointments,
   updateAppointmentStatus,
   getStats,

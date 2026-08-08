@@ -5,7 +5,7 @@ const PDFDocument = require('pdfkit');
 function generateReceiptPDF(appointment, res) {
   const {
     CLINIC_NAME = 'Aarogya Homeopathic Clinic',
-    CLINIC_DOCTOR = 'Dr. Aalok Kushwaha',
+    CLINIC_DOCTOR = 'Dr. Alok Kushwaha',
     CLINIC_PHONE = '',
     CLINIC_EMAIL = '',
     CLINIC_ADDRESS = '',
